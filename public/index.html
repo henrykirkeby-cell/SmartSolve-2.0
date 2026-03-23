@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SolveMate</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f0f4f0;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { font-weight: 700; font-size: 15px; color: #2e7d32; }
+    .nav-logo span { color: #222; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(145deg, #2e7d32 0%, #1b5e20 100%);
+      color: white;
+      text-align: center;
+      padding: 72px 24px 64px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 17px;
+      opacity: 0.85;
+      max-width: 520px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+
+    /* ── AUTH CARD ── */
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 48px 16px 16px;
+    }
+    .auth-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab.active { color: #2e7d32; border-bottom-color: #2e7d32; }
+    .tab:hover:not(.active) { color: #555; }
+
+    /* Form */
+    .form-body { padding: 28px 28px 24px; }
+    .form-body h2 { font-size: 18px; margin-bottom: 4px; }
+    .form-body .sub { font-size: 13px; color: #888; margin-bottom: 22px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: #4CAF50; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { background: #43a047; }
+    .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Status */
+    #status {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+    #status.success { background: #e8f5e9; color: #1b5e20; display: block; }
+    #status.error   { background: #ffebee; color: #b71c1c; display: block; }
+
+    /* Logged-in state */
+    .logged-in {
+      padding: 24px 28px 28px;
+      display: none;
+    }
+    .logged-in .check { font-size: 36px; margin-bottom: 8px; text-align: center; }
+    .logged-in h2 { font-size: 18px; margin-bottom: 6px; color: #2e7d32; text-align: center; }
+    .logged-in .user-email {
+      display: inline-block;
+      background: #f0f4f0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #2e7d32;
+      font-weight: 600;
+      margin: 4px 0 12px;
+    }
+
+    /* Plan badge */
+    .plan-box {
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .plan-box.free {
+      background: #fff8e1;
+      border: 1.5px solid #ffe082;
+    }
+    .plan-box.pro {
+      background: #e8f5e9;
+      border: 1.5px solid #a5d6a7;
+    }
+    .plan-box .plan-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+      color: #888;
+    }
+    .plan-box.free .plan-label { color: #f57f17; }
+    .plan-box.pro  .plan-label { color: #2e7d32; }
+    .plan-box .plan-value {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .plan-box.free .plan-value { color: #e65100; }
+    .plan-box.pro  .plan-value { color: #1b5e20; }
+    .plan-box .plan-sub { font-size: 12px; color: #777; margin-top: 3px; }
+
+    /* Progress bar */
+    .usage-bar-wrap {
+      background: #eee;
+      border-radius: 6px;
+      height: 8px;
+      margin: 8px 0 4px;
+      overflow: hidden;
+    }
+    .usage-bar {
+      height: 100%;
+      background: #ff9800;
+      border-radius: 6px;
+      transition: width 0.4s;
+    }
+    .usage-bar.full { background: #f44336; }
+
+    .btn-upgrade {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-bottom: 10px;
+    }
+    .btn-upgrade:hover { opacity: 0.9; }
+
+    .btn-logout {
+      background: none;
+      border: 1.5px solid #ddd;
+      color: #888;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .btn-logout:hover { border-color: #bbb; color: #555; }
+
+    /* ── PRICING SECTION ── */
+    .pricing-section {
+      padding: 64px 24px;
+      text-align: center;
+      background: #f0f4f0;
+    }
+    .pricing-section h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .pricing-section .sub { color: #777; font-size: 15px; margin-bottom: 44px; }
+
+    .pricing-grid {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .pricing-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 28px;
+      flex: 1;
+      min-width: 260px;
+      max-width: 320px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 2px solid transparent;
+      position: relative;
+    }
+    .pricing-card.popular {
+      border-color: #4CAF50;
+      box-shadow: 0 6px 28px rgba(76,175,80,0.18);
+    }
+    .popular-badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .pricing-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: #444; }
+    .pricing-price {
+      font-size: 40px;
+      font-weight: 800;
+      color: #222;
+      margin: 12px 0 4px;
+      line-height: 1;
+    }
+    .pricing-price sup { font-size: 20px; vertical-align: top; margin-top: 8px; }
+    .pricing-price span { font-size: 15px; font-weight: 400; color: #888; }
+    .pricing-desc { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+    .pricing-features li {
+      font-size: 13px;
+      color: #555;
+      padding: 5px 0;
+    }
+    .pricing-features li::before { content: '✓  '; color: #4CAF50; font-weight: 700; }
+    .pricing-features li.no::before { content: '✗  '; color: #ccc; }
+    .pricing-features li.no { color: #bbb; }
+
+    .btn-plan {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-plan.free-btn {
+      background: #f5f5f5;
+      color: #555;
+      border: 1.5px solid #ddd;
+    }
+    .btn-plan.free-btn:hover { background: #efefef; }
+    .btn-plan.pro-btn {
+      background: linear-gradient(135deg, #4CAF50, #2e7d32);
+      color: white;
+    }
+    .btn-plan.pro-btn:hover { opacity: 0.92; }
+
+    /* ── INSTALL GUIDE ── */
+    .install-section {
+      background: white;
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .install-section h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .install-section .sub { color: #777; font-size: 15px; margin-bottom: 48px; }
+
+    .install-steps {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .install-step {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 32px;
+      align-items: flex-start;
+    }
+    .install-num {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      background: #2e7d32;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .install-content h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .install-content p  { font-size: 14px; color: #555; line-height: 1.7; }
+    .btn-download {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 11px 22px;
+      background: linear-gradient(135deg, #4CAF50, #2e7d32);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: opacity 0.2s;
+    }
+    .btn-download:hover { opacity: 0.9; }
+    .install-note {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps-section {
+      background: white;
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .steps-section h2 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .steps-section .sub { color: #888; font-size: 15px; margin-bottom: 48px; }
+
+    .steps {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .step {
+      flex: 1;
+      min-width: 200px;
+      max-width: 240px;
+    }
+    .step-num {
+      width: 44px;
+      height: 44px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .step h3 { font-size: 15px; margin-bottom: 6px; }
+    .step p  { font-size: 13px; color: #777; line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: auto;
+      background: #1a1a1a;
+      color: #888;
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">⚡ <span>SolveMate</span></div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">✨ AI-Powered</div>
+    <h1>SolveMate your McGraw Hill<br>homework automatically</h1>
+    <p>Create an account, install the extension, and let AI handle your Connect assignments.</p>
+  </div>
+
+  <!-- Auth card -->
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <!-- Logged-in state -->
+      <div class="logged-in" id="loggedInView">
+        <div class="check" style="text-align:center;">✅</div>
+        <h2>You're logged in!</h2>
+        <div style="text-align:center;">
+          <div class="user-email" id="loggedInEmail"></div>
+        </div>
+
+        <!-- Plan box (shown after /api/me loads) -->
+        <div class="plan-box free" id="planBox" style="display:none;">
+          <div class="plan-label" id="planLabel">FREE PLAN</div>
+          <div class="plan-value" id="planValue">10 free questions</div>
+          <div class="plan-sub"  id="planSub"></div>
+          <div class="usage-bar-wrap" id="usageBarWrap" style="display:none;">
+            <div class="usage-bar" id="usageBar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Upgrade button (free users only) -->
+        <button class="btn-upgrade" id="upgradeBtn" style="display:none;">
+          ⭐ Upgrade to Pro — $4.99/month
+        </button>
+
+        <p style="font-size:12px; color:#555; line-height:1.7; margin-bottom:12px; text-align:center;">
+          Open the extension in Chrome and log in there,<br>
+          then go to McGraw Hill Connect and click<br>
+          the <strong>⚡ SolveMate</strong> tab.
+        </p>
+
+        <button class="btn-logout" id="logoutBtn">Log out</button>
+      </div>
+
+      <!-- Auth forms -->
+      <div id="authView">
+        <div class="tabs">
+          <div class="tab active" id="tabLogin"  data-tab="login">Log In</div>
+          <div class="tab"        id="tabSignup" data-tab="signup">Sign Up</div>
+        </div>
+
+        <!-- Login form -->
+        <div class="form-body" id="loginForm">
+          <h2>Welcome back</h2>
+          <div class="sub">Log in to your account</div>
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" />
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" />
+          <button class="btn-primary" id="loginBtn">Log In →</button>
+          <div id="status"></div>
+        </div>
+
+        <!-- Signup form -->
+        <div class="form-body" id="signupForm" style="display:none;">
+          <h2>Create account</h2>
+          <div class="sub">Free to sign up · 10 free questions included</div>
+          <label>Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" />
+          <label>Password</label>
+          <input type="password" id="signupPassword" placeholder="Min. 6 characters" />
+          <button class="btn-primary" id="signupBtn">Create Account →</button>
+          <div id="statusSignup"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Pricing -->
+  <div class="pricing-section">
+    <h2>Simple pricing</h2>
+    <div class="sub">Start free, upgrade when you need more</div>
+    <div class="pricing-grid">
+
+      <!-- Free -->
+      <div class="pricing-card">
+        <h3>Free</h3>
+        <div class="pricing-price"><sup>$</sup>0<span>/mo</span></div>
+        <div class="pricing-desc">Get started at no cost</div>
+        <ul class="pricing-features">
+          <li>10 free questions</li>
+          <li>Multiple choice + fill-in-blank</li>
+          <li>Confidence auto-click</li>
+          <li class="no">Unlimited questions</li>
+          <li class="no">Priority support</li>
+        </ul>
+        <button class="btn-plan free-btn" id="pricingFreeBtn">Get Started Free</button>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card popular">
+        <div class="popular-badge">⭐ MOST POPULAR</div>
+        <h3>Pro</h3>
+        <div class="pricing-price"><sup>$</sup>4<span style="font-size:40px;font-weight:800;color:#222;">.99</span><span>/mo</span></div>
+        <div class="pricing-desc">Unlimited access, cancel anytime</div>
+        <ul class="pricing-features">
+          <li>Unlimited questions</li>
+          <li>Multiple choice + fill-in-blank</li>
+          <li>Confidence auto-click</li>
+          <li>Priority support</li>
+          <li>Early access to new features</li>
+        </ul>
+        <button class="btn-plan pro-btn" id="pricingProBtn">Upgrade to Pro →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Install Guide -->
+  <div class="install-section">
+    <h2>How to install the extension</h2>
+    <div class="sub">Takes about 2 minutes — no tech skills needed</div>
+
+    <div class="install-steps">
+
+      <div class="install-step">
+        <div class="install-num">1</div>
+        <div class="install-content">
+          <h3>Download the extension</h3>
+          <p>Click the button below to download the SolveMate extension files to your computer.</p>
+          <a class="btn-download" href="/solvemate-extension.zip" download>
+            ⬇ Download SolveMate Extension
+          </a>
+          <div class="install-note">File is a .zip — you'll extract it in the next step</div>
+        </div>
+      </div>
+
+      <div class="install-step">
+        <div class="install-num">2</div>
+        <div class="install-content">
+          <h3>Extract the zip file</h3>
+          <p>Find the downloaded file (usually in your Downloads folder), right-click it, and select <strong>Extract All</strong>. Remember where you put the extracted folder.</p>
+        </div>
+      </div>
+
+      <div class="install-step">
+        <div class="install-num">3</div>
+        <div class="install-content">
+          <h3>Open Chrome Extensions</h3>
+          <p>In Chrome, go to <strong>chrome://extensions</strong> in the address bar, or click the three dots menu → More tools → Extensions.</p>
+        </div>
+      </div>
+
+      <div class="install-step">
+        <div class="install-num">4</div>
+        <div class="install-content">
+          <h3>Enable Developer Mode</h3>
+          <p>In the top right corner of the Extensions page, toggle on <strong>Developer mode</strong>. New buttons will appear at the top left.</p>
+        </div>
+      </div>
+
+      <div class="install-step">
+        <div class="install-num">5</div>
+        <div class="install-content">
+          <h3>Load the extension</h3>
+          <p>Click <strong>Load unpacked</strong>, then select the extracted folder from Step 2. SolveMate will appear in your extensions list!</p>
+        </div>
+      </div>
+
+      <div class="install-step">
+        <div class="install-num">6</div>
+        <div class="install-content">
+          <h3>Pin it and log in</h3>
+          <p>Click the puzzle piece icon 🧩 in Chrome's toolbar, find SolveMate, and click the pin icon. Then click the SolveMate icon and log in with your account.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="steps-section">
+    <h2>How it works</h2>
+    <div class="sub">Set up in under 2 minutes</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create an account</h3>
+        <p>Sign up above with your email and a password — first 10 questions are free</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Install the extension</h3>
+        <p>Add SolveMate to Chrome from the Web Store</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Log in from the extension</h3>
+        <p>Click the extension icon in Chrome and enter your credentials</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Hit Auto Answer</h3>
+        <p>Open any McGraw Hill assignment and click the green tab!</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 SolveMate &nbsp;·&nbsp; Not affiliated with McGraw-Hill Education
+  </footer>
+
+  <script>
+    // ── Tab switch ──
+    function switchTab(tab) {
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('loginForm').style.display  = tab === 'login'  ? 'block' : 'none';
+      document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+      clearStatus();
+    }
+
+    document.getElementById('tabLogin').addEventListener('click',  () => switchTab('login'));
+    document.getElementById('tabSignup').addEventListener('click', () => switchTab('signup'));
+
+    function clearStatus() {
+      ['status', 'statusSignup'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = '';
+        el.textContent = '';
+      });
+    }
+
+    function showStatus(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = type;
+    }
+
+    // ── Check if already logged in ──
+    const savedEmail = localStorage.getItem('mhe_email');
+    const savedToken = localStorage.getItem('mhe_token');
+    if (savedEmail && savedToken) showLoggedIn(savedEmail, savedToken);
+
+    function showLoggedIn(email, token) {
+      document.getElementById('authView').style.display = 'none';
+      document.getElementById('loggedInView').style.display = 'block';
+      document.getElementById('loggedInEmail').textContent = email;
+      loadPlanInfo(token);
+    }
+
+    async function loadPlanInfo(token) {
+      try {
+        const res  = await fetch('/api/me', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.user) return;
+
+        const { plan, freeQuestionsUsed, freeQuestionLimit } = data.user;
+        const planBox    = document.getElementById('planBox');
+        const planLabel  = document.getElementById('planLabel');
+        const planValue  = document.getElementById('planValue');
+        const planSub    = document.getElementById('planSub');
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        const usageWrap  = document.getElementById('usageBarWrap');
+        const usageBar   = document.getElementById('usageBar');
+
+        planBox.style.display = 'block';
+
+        if (plan === 'pro') {
+          planBox.className = 'plan-box pro';
+          planLabel.textContent = '⭐ PRO PLAN';
+          planValue.textContent = 'Unlimited questions';
+          planSub.textContent   = 'Thanks for subscribing!';
+          upgradeBtn.style.display = 'none';
+        } else {
+          const used      = freeQuestionsUsed || 0;
+          const limit     = freeQuestionLimit || 10;
+          const remaining = Math.max(0, limit - used);
+          const pct       = Math.min(100, (used / limit) * 100);
+
+          planBox.className = 'plan-box free';
+          planLabel.textContent = 'FREE PLAN';
+          planValue.textContent = `${remaining} question${remaining !== 1 ? 's' : ''} remaining`;
+          planSub.textContent   = `${used} of ${limit} free questions used`;
+
+          usageWrap.style.display = 'block';
+          usageBar.style.width    = pct + '%';
+          if (pct >= 100) usageBar.classList.add('full');
+
+          upgradeBtn.style.display = remaining === 0 ? 'block' : 'block'; // always show for free
+          if (remaining === 0) {
+            upgradeBtn.textContent = '🔒 Upgrade to Pro to continue';
+          }
+        }
+      } catch (e) {
+        console.log('Could not load plan info:', e.message);
+      }
+    }
+
+    // ── Upgrade button ──
+    async function startUpgrade() {
+      const token = localStorage.getItem('mhe_token');
+      if (!token) { switchTab('login'); return; }
+
+      const btn = document.getElementById('upgradeBtn') || document.getElementById('pricingProBtn');
+      btn.disabled = true;
+      btn.textContent = 'Redirecting to checkout...';
+
+      try {
+        const res  = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not start checkout.');
+        window.location.href = data.url;
+      } catch (err) {
+        alert('❌ ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '⭐ Upgrade to Pro — $4.99/month';
+      }
+    }
+
+    document.getElementById('upgradeBtn').addEventListener('click', startUpgrade);
+    document.getElementById('pricingProBtn').addEventListener('click', () => {
+      const token = localStorage.getItem('mhe_token');
+      if (!token) {
+        switchTab('signup');
+        document.querySelector('.auth-wrapper').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        startUpgrade();
+      }
+    });
+    document.getElementById('pricingFreeBtn').addEventListener('click', () => {
+      const token = localStorage.getItem('mhe_token');
+      if (token) {
+        document.querySelector('.auth-wrapper').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        switchTab('signup');
+        document.querySelector('.auth-wrapper').scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    // ── Log In ──
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) return showStatus('status', '⚠️ Enter email and password.', 'error');
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true; btn.textContent = 'Logging in...';
+
+      try {
+        const res  = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Login failed.');
+
+        localStorage.setItem('mhe_token', data.token);
+        localStorage.setItem('mhe_email', data.email);
+        showLoggedIn(data.email, data.token);
+
+      } catch (err) {
+        showStatus('status', '❌ ' + err.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Log In →';
+      }
+    });
+
+    // ── Sign Up ──
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+      const email    = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      if (!email || !password) return showStatus('statusSignup', '⚠️ Enter email and password.', 'error');
+      if (password.length < 6) return showStatus('statusSignup', '⚠️ Password must be at least 6 characters.', 'error');
+
+      const btn = document.getElementById('signupBtn');
+      btn.disabled = true; btn.textContent = 'Creating account...';
+
+      try {
+        const res  = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Signup failed.');
+
+        localStorage.setItem('mhe_token', data.token);
+        localStorage.setItem('mhe_email', data.email);
+        showLoggedIn(data.email, data.token);
+
+      } catch (err) {
+        showStatus('statusSignup', '❌ ' + err.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Account →';
+      }
+    });
+
+    // ── Log Out ──
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('mhe_token');
+      localStorage.removeItem('mhe_email');
+      document.getElementById('loggedInView').style.display = 'none';
+      document.getElementById('authView').style.display = 'block';
+    });
+
+    // ── Enter key submits ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const loginVisible = document.getElementById('loginForm').style.display !== 'none';
+      if (loginVisible) document.getElementById('loginBtn').click();
+      else              document.getElementById('signupBtn').click();
+    });
+  </script>
+
+</body>
+</html>

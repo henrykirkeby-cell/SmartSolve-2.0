@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SolveMate Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #f0f2f5;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      background: #1a1a2e;
+      color: white;
+      padding: 0 28px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-title { font-weight: 700; font-size: 15px; }
+    .nav-title span { color: #4CAF50; }
+    .nav-right { font-size: 12px; color: #888; }
+
+    /* ── Login screen ── */
+    #loginScreen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 52px);
+    }
+    .login-card {
+      background: white;
+      border-radius: 14px;
+      padding: 36px 32px;
+      width: 340px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .login-card h2 { font-size: 20px; margin-bottom: 6px; }
+    .login-card p  { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .login-card input {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .login-card input:focus { outline: none; border-color: #4CAF50; }
+    .btn-green {
+      width: 100%;
+      padding: 11px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-green:hover { background: #43a047; }
+    #loginError { color: #c62828; font-size: 13px; margin-top: 10px; }
+
+    /* ── Main dashboard ── */
+    #dashboard { display: none; padding: 28px; max-width: 1100px; margin: 0 auto; }
+
+    /* Stats row */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px 22px;
+      flex: 1;
+      min-width: 160px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-card .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-card .value { font-size: 30px; font-weight: 800; color: #222; }
+    .stat-card .value.green { color: #2e7d32; }
+    .stat-card .value.orange { color: #e65100; }
+
+    /* Controls bar */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .controls input {
+      padding: 9px 13px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 13px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .controls input:focus { outline: none; border-color: #4CAF50; }
+    .btn-sm {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-refresh { background: #e8f5e9; color: #2e7d32; }
+    .btn-refresh:hover { background: #c8e6c9; }
+
+    /* Table */
+    .table-wrap {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f8f9fa; }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888;
+      border-bottom: 1px solid #eee;
+    }
+    td {
+      padding: 13px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f5f5f5;
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.pro  { background: #e8f5e9; color: #2e7d32; }
+    .badge.free { background: #fff8e1; color: #e65100; }
+
+    .actions { display: flex; gap: 6px; }
+    .btn-action {
+      padding: 5px 11px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-upgrade   { background: #e8f5e9; color: #2e7d32; }
+    .btn-upgrade:hover { background: #c8e6c9; }
+    .btn-downgrade { background: #fff8e1; color: #e65100; }
+    .btn-downgrade:hover { background: #ffe0b2; }
+    .btn-reset     { background: #e3f2fd; color: #1565c0; }
+    .btn-reset:hover { background: #bbdefb; }
+    .btn-delete    { background: #ffebee; color: #c62828; }
+    .btn-delete:hover { background: #ffcdd2; }
+
+    .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+      z-index: 9999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    #toast.show { display: block; }
+    #toast.success { background: #2e7d32; }
+    #toast.error   { background: #c62828; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-title">⚡ <span>SolveMate</span> Admin</div>
+  <div class="nav-right" id="navInfo">Not logged in</div>
+</nav>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h2>🔐 Admin Login</h2>
+    <p>Enter your admin password to continue</p>
+    <input type="password" id="adminPw" placeholder="Admin password" />
+    <button class="btn-green" id="loginBtn">Log In →</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="label">Total Users</div>
+      <div class="value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Pro Users</div>
+      <div class="value green" id="statPro">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Free Users</div>
+      <div class="value orange" id="statFree">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Questions Answered</div>
+      <div class="value" id="statQuestions">—</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchBox" placeholder="Search by email..." />
+    <button class="btn-sm btn-refresh" id="refreshBtn">↻ Refresh</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Plan</th>
+          <th>Free Used</th>
+          <th>Total Answered</th>
+          <th>Last Active</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <tr><td colspan="7" class="empty">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let adminPassword = '';
+  let allUsers      = [];
+
+  // ── Login ──
+  document.getElementById('loginBtn').addEventListener('click', login);
+  document.getElementById('adminPw').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+
+  async function login() {
+    const pw = document.getElementById('adminPw').value;
+    if (!pw) return;
+
+    try {
+      const res  = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
+        body: JSON.stringify({})
+      });
+      if (!res.ok) throw new Error('Wrong password.');
+      adminPassword = pw;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display   = 'block';
+      document.getElementById('navInfo').textContent = 'Logged in as admin';
+      const data = await res.json();
+      renderUsers(data.users);
+    } catch (err) {
+      document.getElementById('loginError').textContent = '❌ ' + err.message;
+    }
+  }
+
+  // ── Load users ──
+  async function loadUsers() {
+    const res  = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (data.success) renderUsers(data.users);
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', loadUsers);
+
+  // ── Search ──
+  document.getElementById('searchBox').addEventListener('input', () => {
+    const q = document.getElementById('searchBox').value.toLowerCase();
+    const filtered = allUsers.filter(u => u.email.includes(q));
+    renderTable(filtered);
+  });
+
+  // ── Render ──
+  function renderUsers(users) {
+    allUsers = users;
+
+    // Stats
+    const proCount  = users.filter(u => u.plan === 'pro').length;
+    const freeCount = users.length - proCount;
+    const totalQ    = users.reduce((sum, u) => sum + (u.totalQuestionsUsed || 0), 0);
+    document.getElementById('statTotal').textContent     = users.length;
+    document.getElementById('statPro').textContent       = proCount;
+    document.getElementById('statFree').textContent      = freeCount;
+    document.getElementById('statQuestions').textContent = totalQ.toLocaleString();
+
+    renderTable(users);
+  }
+
+  function renderTable(users) {
+    const tbody = document.getElementById('userTable');
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No users found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+      <tr data-email="${u.email}">
+        <td><strong>${u.email}</strong></td>
+        <td><span class="badge ${u.plan}">${u.plan === 'pro' ? '⭐ Pro' : 'Free'}</span></td>
+        <td>${u.plan === 'pro' ? '∞' : `${u.freeQuestionsUsed}/10`}</td>
+        <td>${u.totalQuestionsUsed || 0}</td>
+        <td>${u.lastUsed ? timeAgo(u.lastUsed) : 'Never'}</td>
+        <td>${formatDate(u.createdAt)}</td>
+        <td>
+          <div class="actions">
+            ${u.plan !== 'pro'
+              ? `<button class="btn-action btn-upgrade"   onclick="setPlan('${u.email}', 'pro')">→ Pro</button>`
+              : `<button class="btn-action btn-downgrade" onclick="setPlan('${u.email}', 'free')">→ Free</button>`
+            }
+            <button class="btn-action btn-reset"   onclick="resetUsage('${u.email}')">Reset</button>
+            <button class="btn-action btn-delete"  onclick="deleteUser('${u.email}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Actions ──
+  async function setPlan(email, plan) {
+    try {
+      const res  = await fetch('/api/admin/set-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        body: JSON.stringify({ email, plan })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast(`✅ ${email} → ${plan}`, 'success');
+      loadUsers();
+    } catch (err) {
+      toast('❌ ' + err.message, 'error');
+    }
+  }
+
+  async function resetUsage(email) {
+    try {
+      const res  = await fetch('/api/admin/reset-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast(`✅ Usage reset for ${email}`, 'success');
+      loadUsers();
+    } catch (err) {
+      toast('❌ ' + err.message, 'error');
+    }
+  }
+
+  async function deleteUser(email) {
+    if (!confirm(`Delete ${email}? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast(`🗑️ ${email} deleted`, 'success');
+      loadUsers();
+    } catch (err) {
+      toast('❌ ' + err.message, 'error');
+    }
+  }
+
+  // ── Helpers ──
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function timeAgo(iso) {
+    const diff = Date.now() - new Date(iso);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)   return 'Just now';
+    if (mins < 60)  return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
+
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent  = msg;
+    el.className    = 'show ' + type;
+    setTimeout(() => el.className = '', 3000);
+  }
+</script>
+</body>
+</html>
